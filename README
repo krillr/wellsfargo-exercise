@@ -1,0 +1,3 @@
+This is an applications exercise for Wells Fargo. It demonstrates a basic knowledge of RESTful API construction and asynchronous work distribution using Python and commonly available 3rd-party libraries. Many of the decisions within are "for fun" rather than meant to be used in a production environment -- for example, storing POSTed data in flat files is a big no-no ;-) But you get the idea.
+
+We're using Redis as our queueing mechanism for asynchronous work. Redis is lightweight and easy to maintain, though not as scalable or featureful as other solutions like RabbitMQ. Celery fully supports Redis.
