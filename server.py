@@ -37,7 +37,7 @@ class WellsFargoExercise(Resource):
         obj['id'] = resource_id
 
         task = create_or_update_resource.delay(obj)
-        task.wait() # Normally you wouldn't do this, but since the API requirements are that the object gets returned after save, we wait.
+        task.wait()
 
         return obj
 
@@ -56,6 +56,20 @@ class WellsFargoExercise(Resource):
             return obj['object']
         
         return [x['object'] for x in db.resources.find()]
+
+    def delete(self, resource_id=None):
+        """
+        Handles both deletion of a single record, and clearing of the
+        entire database. If no resource_id is specified, we clear the database.
+        """
+
+        if resource_id:
+            db.resources.delete_one({"_id":resource_id})
+        else:
+            db.resources.delete_many({})
+
+	return { "success": True }
+
 
 api.add_resource(WellsFargoExercise, "/resources", "/resources/<resource_id>")
 
