@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_restful import Resource, Api
 from flask_celery import make_celery
 
-import json, ipdb, os, shelve, uuid
+import json, pymongo, uuid
 
 app = Flask(__name__)
 api = Api(app)
@@ -14,12 +14,13 @@ app.config.update(
 )
 celery = make_celery(app)
 
+mongo = pymongo.MongoClient()
+db = mongo.wellsfargo
+
 @celery.task()
 def create_or_update_resource(resource):
-    path = os.path.join("resources", resource['id'])
-    f = open(path, 'w')
-    json.dump(resource, f)
-    f.close()
+    db_obj = { "_id": resource['id'], "object": resource }
+    db.resources.update({ "_id": resource['id']}, db_obj, upsert=True);
 
 class WellsFargoExercise(Resource):
     def post(self, resource_id=None):
@@ -50,11 +51,11 @@ class WellsFargoExercise(Resource):
         object rather than a 404.
         """
         if resource_id:
-            path = os.path.join("resources", resource_id)
-            if not os.path.exists(path): return {}
-            return json.load(open(path))
+	    obj = db.resources.find_one({"_id":resource_id})
+            if obj == None: return {}
+            return obj['object']
         
-        return [x for x in db.values()]
+        return [x['object'] for x in db.resources.find()]
 
 api.add_resource(WellsFargoExercise, "/resources", "/resources/<resource_id>")
 
